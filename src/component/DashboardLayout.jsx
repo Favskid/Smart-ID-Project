@@ -44,7 +44,7 @@ const DashboardLayout = ({ children, role = "staff" }) => {
     <div className="drawer lg:drawer-open h-screen overflow-hidden">
       {/* Drawer toggle for small screens */}
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content flex flex-col h-full">
+      <div className="drawer-content flex flex-col h-full min-h-0">
         {/* Top Navbar */}
         <div className="navbar bg-white border-b shadow-sm px-4 flex-shrink-0">
           <div className="flex-none lg:hidden">
@@ -78,8 +78,8 @@ const DashboardLayout = ({ children, role = "staff" }) => {
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6 bg-gradient-to-br from-gray-50 to-blue-50 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 p-4 lg:p-6 bg-gradient-to-br from-gray-50 to-blue-50 overflow-y-auto min-h-0">
+          <div className="h-full">{children}</div>
         </main>
       </div>
 

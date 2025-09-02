@@ -168,9 +168,9 @@ const EmployeeTable = () => {
 
   return (
     <DashboardLayout role="admin" profilePic="/src/assets/pic.png">
-      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-md">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-md">
         {/* Dashboard Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-6">
           <div className="bg-white p-4 rounded-lg shadow-md border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -220,7 +220,7 @@ const EmployeeTable = () => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 px-6">
           <h2 className="text-xl font-semibold text-gray-700">Staff Management</h2>
           <div className="flex gap-3">
             <button 
@@ -236,20 +236,23 @@ const EmployeeTable = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="table">
+        <div
+          className="overflow-auto px-6"
+          style={{ maxHeight: "calc(100vh - 260px)" }}
+        >
+          <table className="table min-w-[1000px]">
             {/* Table Head */}
-            <thead className="bg-blue-100 text-gray-700">
+            <thead className="bg-blue-100 text-gray-700 sticky top-0 z-20">
               <tr>
-                <th className="text-black">ID</th>
-                <th className="text-black">Name</th>
-                <th className="text-black">Job Title</th>
-                <th className="text-black">Department</th>
-                <th className="text-black">Email</th>
-                <th className="text-black">Phone</th>
-                <th className="text-black">Status</th>
-                <th className="text-black">QR Code</th>
-                <th className="text-black">Actions</th>
+                <th className="text-black sticky top-0 bg-blue-100">ID</th>
+                <th className="text-black sticky top-0 bg-blue-100">Name</th>
+                <th className="text-black sticky top-0 bg-blue-100">Job Title</th>
+                <th className="text-black sticky top-0 bg-blue-100">Department</th>
+                <th className="text-black sticky top-0 bg-blue-100">Email</th>
+                <th className="text-black sticky top-0 bg-blue-100 whitespace-nowrap">Phone</th>
+                <th className="text-black sticky top-0 bg-blue-100">Status</th>
+                <th className="text-black sticky top-0 bg-blue-100">QR Code</th>
+                <th className="text-black sticky top-0 bg-blue-100">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -271,7 +274,7 @@ const EmployeeTable = () => {
                   <td className="text-black">{emp.jobTitle}</td>
                   <td className="text-black">{emp.department}</td>
                   <td className="text-black">{emp.email}</td>
-                  <td className="text-black">{emp.phone}</td>
+                  <td className="text-black whitespace-nowrap">{emp.phone}</td>
                   <td>
                     <span className={`badge ${emp.status === "active" ? "badge-success" : "badge-warning"}`}>
                       {emp.status}
