@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaUserCircle,
@@ -17,12 +17,24 @@ import {
 const DashboardLayout = ({ children, role = "staff" }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    navigate("/login", { replace: true });
+  };
+
+  const cancelLogout = () => setShowLogoutModal(false);
 
   // Sidebar menus for staff
   const staffMenu = [
-    { name: "Smart ID", icon: <FaIdCard className="text-blue-600" />, href: "/dashboard/smart-id", bg: "bg-blue-100" },
-    { name: "Business Card", icon: <FaAddressCard className="text-green-600" />, href: "/dashboard/business-card", bg: "bg-green-100" },
-    { name: "Profile", icon: <FaUser className="text-purple-600" />, href: "/dashboard/profile", bg: "bg-purple-100" },
+    { name: "Profile", icon: <FaUser className="text-purple-600" />, href: "/dashboard/staff/profile", bg: "bg-purple-100" },
+    { name: "Smart ID", icon: <FaIdCard className="text-blue-600" />, href: "/dashboard/staff/smartID", bg: "bg-blue-100" },
+    { name: "Business Card", icon: <FaAddressCard className="text-green-600" />, href: "/dashboard/staff/business-card", bg: "bg-green-100" },
   ];
 
   // Sidebar menus for admin
@@ -61,16 +73,7 @@ const DashboardLayout = ({ children, role = "staff" }) => {
             </span>
           </div>
           <div className="flex-none flex items-center gap-2">
-            <button className="btn btn-ghost btn-circle relative">
-              <FaBell className="text-gray-600" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                3
-              </span>
-            </button>
-            <button className="btn btn-ghost btn-circle">
-              <FaCog className="text-gray-600" />
-            </button>
-            <button className="btn bg-red-500 text-white hover:bg-red-600 rounded-lg flex items-center gap-2 transition-colors">
+            <button onClick={handleLogout} className="btn bg-red-500 text-white hover:bg-red-600 rounded-lg flex items-center gap-2 transition-colors">
               <FaSignOutAlt />
               Log Out
             </button>
@@ -129,6 +132,20 @@ const DashboardLayout = ({ children, role = "staff" }) => {
           </ul>
         </aside>
       </div>
+
+      {/* Logout Modal */}
+      {showLogoutModal && (
+        <dialog open className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Log out</h3>
+            <p className="py-4">Do you want to log out?</p>
+            <div className="modal-action">
+              <button className="btn btn-ghost" onClick={cancelLogout}>Cancel</button>
+              <button className="btn btn-error" onClick={confirmLogout}>Log Out</button>
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 };
