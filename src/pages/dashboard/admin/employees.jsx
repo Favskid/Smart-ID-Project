@@ -43,6 +43,9 @@ const EmployeeTable = () => {
     },
   ]);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [employeeIdToDelete, setEmployeeIdToDelete] = useState(null);
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -141,11 +144,23 @@ const EmployeeTable = () => {
     ));
   };
 
-  // Delete employee
-  const deleteEmployee = (employeeId) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
+  // Delete flow with modal
+  const promptDeleteEmployee = (employeeId) => {
+    setEmployeeIdToDelete(employeeId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteEmployee = () => {
+    if (employeeIdToDelete) {
+      setEmployees(prev => prev.filter(emp => emp.id !== employeeIdToDelete));
+      setEmployeeIdToDelete(null);
+      setShowDeleteModal(false);
     }
+  };
+
+  const cancelDeleteEmployee = () => {
+    setEmployeeIdToDelete(null);
+    setShowDeleteModal(false);
   };
 
   // Open edit form
@@ -168,7 +183,7 @@ const EmployeeTable = () => {
 
   return (
     <DashboardLayout role="admin" profilePic="/src/assets/pic.png">
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-md">
+    <div className="min-h-screen">
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-6">
           <div className="bg-white p-4 rounded-lg shadow-md border border-gray-100">
@@ -305,7 +320,7 @@ const EmployeeTable = () => {
                         {emp.status === "active" ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
                       </button>
                       <button
-                        onClick={() => deleteEmployee(emp.id)}
+                        onClick={() => promptDeleteEmployee(emp.id)}
                         className="btn btn-xs btn-outline btn-error"
                         title="Delete"
                       >
@@ -580,6 +595,20 @@ const EmployeeTable = () => {
               >
                 Close
               </button>
+            </div>
+          </dialog>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <dialog open className="modal modal-open">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Delete Staff</h3>
+              <p className="py-4">Are you sure you want to delete this staff member?</p>
+              <div className="modal-action">
+                <button className="btn btn-ghost" onClick={cancelDeleteEmployee}>Cancel</button>
+                <button className="btn btn-error" onClick={confirmDeleteEmployee}>Delete</button>
+              </div>
             </div>
           </dialog>
         )}
