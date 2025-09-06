@@ -34,15 +34,15 @@ const DashboardLayout = ({ children, role = "staff" }) => {
   const staffMenu = [
     { name: "Profile", icon: <FaUser className="text-purple-600" />, href: "/dashboard/staff/profile", bg: "bg-purple-100" },
     { name: "Smart ID", icon: <FaIdCard className="text-blue-600" />, href: "/dashboard/staff/smartID", bg: "bg-blue-100" },
-    { name: "Business Card", icon: <FaAddressCard className="text-green-600" />, href: "/dashboard/staff/business-card", bg: "bg-green-100" },
+    { name: "Business Card", icon: <FaAddressCard className="text-green-600" />, href: "#", bg: "bg-green-100" },
   ];
 
   // Sidebar menus for admin
   const adminMenu = [
-    { name: "Dashboard", icon: <FaUsers className="text-indigo-600" />, href: "/dashboard/admin", bg: "bg-indigo-100" },
+    { name: "Dashboard", icon: <FaUsers className="text-indigo-600" />, href: "/dashboard/admin/Adminprofile", bg: "bg-indigo-100" },
     { name: "Employees", icon: <FaUsers className="text-indigo-600" />, href: "/dashboard/admin/employees", bg: "bg-indigo-100" },
-    { name: "Reports", icon: <FaChartBar className="text-orange-600" />, href: "/dashboard/admin/reports", bg: "bg-orange-100" },
-    { name: "System Settings", icon: <FaCogs className="text-teal-600" />, href: "/dashboard/admin/settings", bg: "bg-teal-100" },
+    // { name: "Reports", icon: <FaChartBar className="text-orange-600" />, href: "/dashboard/admin", bg: "bg-orange-100" },
+    // { name: "System Settings", icon: <FaCogs className="text-teal-600" />, href: "/dashboard/admin/settings", bg: "bg-teal-100" },
   ];
 
   // Choose menu based on role

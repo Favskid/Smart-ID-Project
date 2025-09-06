@@ -20,9 +20,16 @@ const StaffProfile = () => {
 
   return (
     <DashboardLayout role="staff" profilePic={staff.photo}>
+          {/* header */}
+          <div className="p-4 md:p-6">
+          <h1 className="text-2xl font-bold text-gray-800">Staff Dashboard</h1>
+          <p className="text-sm text-gray-500">Welcome back, {staff.name}</p>
+          </div>
+
       <div className="min-h-[calc(100vh-100px)] p-4 md:p-6">
         <div className="bg-white/80 backdrop-blur rounded-2xl shadow-md border border-gray-100 p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+
             {/* Photo */}
             <div className="flex-shrink-0">
               <div className="avatar">
@@ -31,6 +38,7 @@ const StaffProfile = () => {
                 </div>
               </div>
             </div>
+
 
             {/* Details */}
             <div className="flex-1 w-full">
