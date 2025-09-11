@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaUserCircle, FaIdCard, FaBuilding, FaUserPlus } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
+import { register } from '../../Api/authService'
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
@@ -10,15 +11,27 @@ export default function Register() {
     staffID: '',
     department: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Registration attempt:', formData)
+    setLoading(true)
+    setError('')
     
-    // For demo purposes, navigate to staff dashboard after registration
-    // In a real app, you would send data to API and handle response
-    navigate('/dashboard/staff')
+    try {
+      const response = await register(formData)
+      console.log('Registration successful:', response)
+      
+      // Navigate to dashboard after successful registration
+      navigate('/dashboard/staff')
+    } catch (error) {
+      console.error('Registration failed:', error)
+      setError(error.message || 'Registration failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -43,6 +56,13 @@ export default function Register() {
               Create your account to get started.
             </p>
           </header>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -90,35 +110,34 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Department Field */}
-            <div>
-              <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
-                Department
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaBuilding className="h-5 w-5 text-gray-400" />
-                </div>
-                <select
-                  id="department"
-                  name="department"
-                  required
-                  value={formData.department}
-                  onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900"
-                >
-                  <option value="">Select your department</option>
-                  <option value="IT">Information Technology</option>
-                  <option value="HR">Human Resources</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Operations">Operations</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Administration">Administration</option>
-                  <option value="Research">Research & Development</option>
-                  <option value="Legal">Legal</option>
-                </select>
-              </div>
-            </div>
+{/* Department Field */}
+<div>
+  <label
+    htmlFor="department"
+    className="block text-sm font-medium text-gray-700 mb-2"
+  >
+    Department
+  </label>
+  <div className="relative">
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <FaBuilding className="h-5 w-5 text-gray-400" />
+    </div>
+    <input
+      type="text"
+      id="department"
+      name="department"
+      placeholder="Enter your department"
+      required
+      value={formData.department}
+      onChange={handleChange}
+      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg 
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                 focus:border-transparent transition duration-200 
+                 bg-white text-gray-900"
+    />
+  </div>
+</div>
+
 
             {/* Password Field */}
             <div>
@@ -181,10 +200,11 @@ export default function Register() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
+              disabled={loading}
+              className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FaUserPlus className="h-4 w-4" />
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 

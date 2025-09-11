@@ -1,63 +1,184 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "../../../component/DashboardLayout";
 import { QRCodeCanvas } from "qrcode.react";
+import { FaUser, FaEnvelope, FaBuilding, FaIdBadge, FaBriefcase } from "react-icons/fa";
+import { getProfile } from "../../../Api/authService";
 
 const StaffProfile = () => {
-  const staff = {
-    id: "EMP001",
-    name: "Favskid Dev",
-    department: "Software Engineering",
-    email: "Favskid@example.com",
-    photo: "/src/assets/pic.png",
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    fetchUserProfile();
+    
+    // Listen for profile updates from other components
+    const handleProfileUpdate = () => {
+      fetchUserProfile();
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const profileData = await getProfile();
+      setUserProfile(profileData);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch profile:', err);
+      setError('Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const qrValue = JSON.stringify({
-    id: staff.id,
-    name: staff.name,
-    department: staff.department,
-    email: staff.email,
-  });
+  // Generate QR code data from user profile
+  const qrValue = userProfile ? JSON.stringify({
+    staffId: userProfile.staffId,
+    name: `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim(),
+    department: userProfile.department,
+    email: userProfile.email,
+    jobTitle: userProfile.jobTitle,
+    position: userProfile.position
+  }) : '';
+
+  if (loading) {
+    return (
+      <DashboardLayout role="staff">
+        <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading profile...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout role="staff">
+        <div className="p-4 md:p-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-600">{error}</p>
+            <button 
+              onClick={fetchUserProfile}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
-    <DashboardLayout role="staff" profilePic={staff.photo}>
-          {/* header */}
-          <div className="p-4 md:p-6">
-          <h1 className="text-2xl font-bold text-gray-800">Staff Dashboard</h1>
-          <p className="text-sm text-gray-500">Welcome back, {staff.name}</p>
-          </div>
+    <DashboardLayout role="staff">
+      {/* header */}
+      <div className="p-4 md:p-6">
+        <h1 className="text-2xl font-bold text-gray-800">Staff Dashboard</h1>
+        <p className="text-sm text-gray-500">
+          Welcome back, {userProfile && (userProfile.firstName || userProfile.lastName) 
+            ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim()
+            : 'User'
+          }
+        </p>
+      </div>
 
       <div className="min-h-[calc(100vh-100px)] p-4 md:p-6">
         <div className="bg-white/80 backdrop-blur rounded-2xl shadow-md border border-gray-100 p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
 
-            {/* Photo */}
+            {/* User Avatar */}
             <div className="flex-shrink-0">
-              <div className="avatar">
-                <div className="w-32 h-32 rounded-full ring ring-indigo-400 ring-offset-2 overflow-hidden">
-                  <img src={staff.photo} alt="Profile" />
-                </div>
+              <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg ring ring-indigo-400 ring-offset-2">
+                {userProfile?.profilePicture ? (
+                  <img 
+                    src={userProfile.profilePicture} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
+                    <FaUser className="text-white text-4xl" />
+                  </div>
+                )}
               </div>
             </div>
 
-
             {/* Details */}
             <div className="flex-1 w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-gray-500">Name</p>
-                  <p className="text-lg font-semibold text-gray-900">{staff.name}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <FaUser className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500">Full Name</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {userProfile && (userProfile.firstName || userProfile.lastName) 
+                        ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim()
+                        : 'Not set'
+                      }
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-gray-500">Email</p>
-                  <p className="text-lg font-medium text-gray-800">{staff.email}</p>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <FaEnvelope className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500">Email</p>
+                    <p className="text-lg font-medium text-gray-800">{userProfile?.email || 'Not available'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-gray-500">Department</p>
-                  <p className="text-lg font-medium text-gray-800">{staff.department}</p>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <FaBuilding className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500">Department</p>
+                    <p className="text-lg font-medium text-gray-800">{userProfile?.department || 'Not set'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-gray-500">Employee ID</p>
-                  <p className="text-lg font-medium text-gray-800">{staff.id}</p>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <FaIdBadge className="text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500">Smart ID</p>
+                    <p className="text-lg font-medium text-gray-800">{userProfile?.smartId || userProfile?.staffId || 'Not available'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-teal-100 rounded-lg">
+                    <FaBriefcase className="text-teal-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500">Job Title</p>
+                    <p className="text-lg font-medium text-gray-800">{userProfile?.jobTitle || 'Not set'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <FaBriefcase className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-gray-500">Position</p>
+                    <p className="text-lg font-medium text-gray-800">{userProfile?.position || 'Not set'}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -65,7 +186,13 @@ const StaffProfile = () => {
             {/* QR */}
             <div className="flex-shrink-0 self-center md:self-auto">
               <div className="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-100">
-                <QRCodeCanvas value={qrValue} size={150} />
+                {qrValue ? (
+                  <QRCodeCanvas value={qrValue} size={150} />
+                ) : (
+                  <div className="w-[150px] h-[150px] bg-gray-200 flex items-center justify-center rounded">
+                    <p className="text-gray-500 text-sm text-center">QR Code<br/>Unavailable</p>
+                  </div>
+                )}
               </div>
               <p className="mt-2 text-center text-xs text-gray-500">Smart ID QR</p>
             </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaUserCircle } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
+import { login } from '../../Api/authService'
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -8,15 +9,27 @@ export default function LoginForm() {
     email: '',
     password: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Login attempt:', formData)
+    setLoading(true)
+    setError('')
     
-    // For demo purposes, navigate to staff dashboard
-    // In a real app, you would check user role from API response
-    navigate('/dashboard/staff')
+    try {
+      const response = await login(formData.email, formData.password)
+      console.log('Login successful:', response)
+      
+      // Navigate to dashboard after successful login
+      navigate('/dashboard/staff')
+    } catch (error) {
+      console.error('Login failed:', error)
+      setError(error.response?.data?.message || 'Login failed. Please check your credentials.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -41,6 +54,13 @@ export default function LoginForm() {
               Welcome back! Please login to your account.
             </p>
           </header>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -122,9 +142,10 @@ export default function LoginForm() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 

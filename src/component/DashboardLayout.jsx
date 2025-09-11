@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaUserCircle,
@@ -13,17 +13,48 @@ import {
   FaChartBar,
   FaCogs,
 } from "react-icons/fa";
+import { getProfile, logout } from "../Api/authService";
 
 const DashboardLayout = ({ children, role = "staff" }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    fetchUserProfile();
+    
+    // Listen for profile updates from other components
+    const handleProfileUpdate = () => {
+      fetchUserProfile();
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const profileData = await getProfile();
+      setUserProfile(profileData);
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
 
   const confirmLogout = () => {
+    logout(); // Clear auth token
     setShowLogoutModal(false);
     navigate("/login", { replace: true });
   };
@@ -97,18 +128,42 @@ const DashboardLayout = ({ children, role = "staff" }) => {
         <aside className="menu bg-white text-gray-800 min-h-full w-72 p-4 border-r shadow-lg overflow-y-auto">
           {/* Profile */}
           <div className="flex flex-col items-center p-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl mb-6">
-            <div className="relative">
-              <img
-                src="/src/assets/pic.png"
-                alt="Profile"
-                className="w-20 h-20 rounded-full object-cover mb-2 border-4 border-white shadow-lg"
-              />
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+            <div className="w-20 h-20 rounded-full overflow-hidden mb-4 shadow-lg">
+              {userProfile?.profilePicture ? (
+                <img 
+                  src={userProfile.profilePicture} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
+                  <FaUser className="text-white text-2xl" />
+                </div>
+              )}
             </div>
-            <h2 className="font-bold text-lg text-gray-800">Favskid Dev</h2>
-            <p className="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-full capitalize">
-              {role}
-            </p>
+            {loading ? (
+              <div className="animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-32 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+              </div>
+            ) : (
+              <>
+                <h2 className="font-bold text-lg text-gray-800">
+                  {userProfile && (userProfile.firstName || userProfile.lastName) 
+                    ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim()
+                    : 'User'
+                  }
+                </h2>
+                <p className="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-full capitalize">
+                  {role}
+                </p>
+                {userProfile?.department && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {userProfile.department}
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           {/* Menu */}
