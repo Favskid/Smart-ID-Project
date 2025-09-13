@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaUserCircle } from 'react-icons/fa'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { login } from '../../Api/authService'
 
 export default function LoginForm() {
@@ -133,9 +133,9 @@ export default function LoginForm() {
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
+                <Link to="/forgotPassword" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
                   Forgot password?
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -153,9 +153,9 @@ export default function LoginForm() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <a href="./register" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
+              <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
                 Register
-              </a>
+              </Link>
             </p>
           </div>
         </div>

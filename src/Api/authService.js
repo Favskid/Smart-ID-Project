@@ -86,11 +86,11 @@ export const getToken = () => {
 export const addProfilePhoto = async (photoFile) => {
   try {
     const formData = new FormData();
-    formData.append('profilePhoto', photoFile);
+    formData.append('Image', photoFile);
     
     const response = await api.post("/add/profilePhoto", formData, {
       headers: {
-        'Content-Type': undefined, // Let browser set the Content-Type with boundary
+        'Content-Type': 'multipart/form-data' // Let browser set the Content-Type with boundary
       },
     });
     return response.data;
@@ -99,3 +99,4 @@ export const addProfilePhoto = async (photoFile) => {
     throw error;
   }
 };
+

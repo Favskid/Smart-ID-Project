@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '../../../component/DashboardLayout'
 import { FaUser, FaPhone, FaBuilding, FaEdit, FaSave, FaTimes, FaCogs, FaBriefcase, FaIdBadge, FaCamera, FaImage } from 'react-icons/fa'
 import { getProfile, updateProfile, addProfilePhoto } from '../../../Api/authService'
+import Notification, { useNotification } from '../../../component/Notification'
 
 export default function Settings() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,14 @@ export default function Settings() {
   const [selectedPhoto, setSelectedPhoto] = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  
+  // Notification system
+  const {
+    notification,
+    showSuccess,
+    showError,
+    clearNotification
+  } = useNotification()
 
   // Fetch user profile on component mount
   useEffect(() => {
@@ -65,12 +74,12 @@ export default function Settings() {
       // Dispatch event to notify other components of profile update
       window.dispatchEvent(new CustomEvent('profileUpdated'))
       
-      alert('Profile updated successfully!')
+      showSuccess('Profile updated successfully!')
       setIsEditing(false)
       setError(null)
     } catch (err) {
       console.error('Failed to update profile:', err)
-      setError('Failed to update profile. Please try again.')
+      showError('Failed to update profile. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -89,13 +98,13 @@ export default function Settings() {
       // Validate file type
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
       if (!validTypes.includes(file.type)) {
-        setError('Please select a valid image file (JPEG, PNG, or GIF)')
+        showError('Please select a valid image file (JPEG, PNG, or GIF)')
         return
       }
       
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        setError('File size must be less than 5MB')
+        showError('File size must be less than 5MB')
         return
       }
       
@@ -128,11 +137,11 @@ export default function Settings() {
       setSelectedPhoto(null)
       setPhotoPreview(null)
       
-      alert('Profile photo updated successfully!')
+      showSuccess('Profile photo updated successfully!')
       setError(null)
     } catch (err) {
       console.error('Failed to upload photo:', err)
-      setError('Failed to upload photo. Please try again.')
+      showError('Failed to upload photo. Please try again.')
     } finally {
       setUploadingPhoto(false)
     }
@@ -175,6 +184,15 @@ export default function Settings() {
 
   return (
     <DashboardLayout role="staff" profilePic="/src/assets/pic.png">
+      {/* Notification Component */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          isVisible={notification.isVisible}
+          onClose={clearNotification}
+        />
+      )}
       {/* Header */}
       <div className="p-4 md:p-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -202,9 +220,9 @@ export default function Settings() {
                 {/* Profile Picture Section */}
                 <div className="flex flex-col items-center lg:items-start">
                   <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg mb-4">
-                    {userProfile.profilePicture ? (
+                    {userProfile.profilePhoto ? (
                       <img 
-                        src={userProfile.profilePicture} 
+                        src={userProfile.profilePhoto} 
                         alt="Profile" 
                         className="w-full h-full object-cover"
                       />

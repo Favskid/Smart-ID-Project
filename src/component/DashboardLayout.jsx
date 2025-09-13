@@ -129,9 +129,9 @@ const DashboardLayout = ({ children, role = "staff" }) => {
           {/* Profile */}
           <div className="flex flex-col items-center p-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl mb-6">
             <div className="w-20 h-20 rounded-full overflow-hidden mb-4 shadow-lg">
-              {userProfile?.profilePicture ? (
+              {userProfile?.profilePhoto ? (
                 <img 
-                  src={userProfile.profilePicture} 
+                  src={userProfile.profilePhoto} 
                   alt="Profile" 
                   className="w-full h-full object-cover"
                 />

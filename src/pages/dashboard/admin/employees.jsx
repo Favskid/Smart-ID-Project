@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import DashboardLayout from "../../../component/DashboardLayout";
 import { FaPlus, FaTimes, FaEdit, FaTrash, FaEye, FaEyeSlash, FaUsers } from "react-icons/fa";
+import Notification, { useNotification } from "../../../component/Notification";
 
 const EmployeeTable = () => {
   const [selectedQR, setSelectedQR] = useState(null);
@@ -17,6 +18,14 @@ const EmployeeTable = () => {
     phone: "",
     pic: ""
   });
+  
+  // Notification system
+  const {
+    notification,
+    showSuccess,
+    showError,
+    clearNotification
+  } = useNotification();
 
   const [employees, setEmployees] = useState([
     {
@@ -89,7 +98,7 @@ const EmployeeTable = () => {
   // Add new employee
   const handleAddEmployee = () => {
     if (!newEmployee.name || !newEmployee.idNumber || !newEmployee.department || !newEmployee.email || !newEmployee.phone) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
@@ -117,13 +126,14 @@ const EmployeeTable = () => {
       pic: ""
     });
     
+    showSuccess(`Staff member ${newEmployee.name} added successfully!`);
     setShowAddForm(false);
   };
 
   // Edit employee
   const handleEditEmployee = () => {
     if (!editingEmployee.name || !editingEmployee.department || !editingEmployee.email || !editingEmployee.phone) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
@@ -131,6 +141,7 @@ const EmployeeTable = () => {
       emp.id === editingEmployee.id ? editingEmployee : emp
     ));
     
+    showSuccess(`Staff member ${editingEmployee.name} updated successfully!`);
     setShowEditForm(false);
     setEditingEmployee(null);
   };
@@ -152,7 +163,9 @@ const EmployeeTable = () => {
 
   const confirmDeleteEmployee = () => {
     if (employeeIdToDelete) {
+      const employeeName = employees.find(emp => emp.id === employeeIdToDelete)?.name || 'Staff member';
       setEmployees(prev => prev.filter(emp => emp.id !== employeeIdToDelete));
+      showSuccess(`${employeeName} deleted successfully!`);
       setEmployeeIdToDelete(null);
       setShowDeleteModal(false);
     }
@@ -183,6 +196,15 @@ const EmployeeTable = () => {
 
   return (
     <DashboardLayout role="admin" profilePic="/src/assets/pic.png">
+      {/* Notification Component */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          isVisible={notification.isVisible}
+          onClose={clearNotification}
+        />
+      )}
     <div className="min-h-screen">
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-6">

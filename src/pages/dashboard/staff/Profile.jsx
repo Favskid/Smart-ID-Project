@@ -1,17 +1,35 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../../component/DashboardLayout";
 import { QRCodeCanvas } from "qrcode.react";
 import { FaUser, FaEnvelope, FaBuilding, FaIdBadge, FaBriefcase } from "react-icons/fa";
 import { getProfile } from "../../../Api/authService";
+import Notification, { useNotification } from "../../../component/Notification";
 
 const StaffProfile = () => {
+  const location = useLocation();
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(false);
+  
+  // Notification system
+  const {
+    notification,
+    showSuccess,
+    clearNotification
+  } = useNotification();
 
   // Fetch user profile on component mount
   useEffect(() => {
     fetchUserProfile();
+    
+    // Show welcome message if coming from registration
+    if (location.state?.fromRegistration) {
+      setTimeout(() => {
+        showSuccess('Welcome! Your account has been created successfully!');
+      }, 500);
+    }
     
     // Listen for profile updates from other components
     const handleProfileUpdate = () => {
@@ -23,13 +41,14 @@ const StaffProfile = () => {
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, []);
+  }, [location.state, showSuccess]);
 
   const fetchUserProfile = async () => {
     try {
       const profileData = await getProfile();
       setUserProfile(profileData);
       setError(null);
+      setImageError(false); // Reset image error when profile loads
     } catch (err) {
       console.error('Failed to fetch profile:', err);
       setError('Failed to load profile data');
@@ -81,6 +100,15 @@ const StaffProfile = () => {
 
   return (
     <DashboardLayout role="staff">
+      {/* Notification Component */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          isVisible={notification.isVisible}
+          onClose={clearNotification}
+        />
+      )}
       {/* header */}
       <div className="p-4 md:p-6">
         <h1 className="text-2xl font-bold text-gray-800">Staff Dashboard</h1>
@@ -99,11 +127,18 @@ const StaffProfile = () => {
             {/* User Avatar */}
             <div className="flex-shrink-0">
               <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg ring ring-indigo-400 ring-offset-2">
-                {userProfile?.profilePicture ? (
+                {userProfile?.profilePhoto && !imageError ? (
                   <img 
-                    src={userProfile.profilePicture} 
+                    src={userProfile.profilePhoto} 
                     alt="Profile" 
                     className="w-full h-full object-cover"
+                    onError={() => {
+                      console.error('Failed to load profile image from:', userProfile.profilePhoto);
+                      setImageError(true);
+                    }}
+                    onLoad={() => {
+                      console.log('Profile image loaded successfully');
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
