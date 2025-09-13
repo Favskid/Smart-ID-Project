@@ -64,8 +64,8 @@ const DashboardLayout = ({ children, role = "staff" }) => {
   // Sidebar menus for staff
   const staffMenu = [
     { name: "Profile", icon: <FaUser className="text-purple-600" />, href: "/dashboard/staff/profile", bg: "bg-purple-100" },
-    { name: "Business Card", icon: <FaIdCard className="text-blue-600" />, href: "/dashboard/staff/smartID", bg: "bg-blue-100" },
-    { name: "Smart ID", icon: <FaAddressCard className="text-green-600" />, href: "#", bg: "bg-green-100" },
+    { name: "Business Card", icon: <FaIdCard className="text-blue-600" />, href: "/dashboard/staff/BusinessCard", bg: "bg-blue-100" },
+    { name: "Smart ID", icon: <FaAddressCard className="text-green-600" />, href: "/dashboard/staff/staffId", bg: "bg-green-100" },
     { name: "Settings", icon: <FaCogs className="text-teal-600" />, href: "/dashboard/staff/settings", bg: "bg-teal-100" },
   ];
 
@@ -105,9 +105,9 @@ const DashboardLayout = ({ children, role = "staff" }) => {
             </span>
           </div>
           <div className="flex-none flex items-center gap-2">
-            <button onClick={handleLogout} className="btn bg-red-500 text-white hover:bg-red-600 rounded-lg flex items-center gap-2 transition-colors">
+            <button onClick={handleLogout} className="btn bg-red-500 text-white hover:bg-red-600 rounded-lg flex items-center gap-2 transition-colors px-2 sm:px-4">
               <FaSignOutAlt />
-              Log Out
+              <span className="hidden sm:inline">Log Out</span>
             </button>
           </div>
         </div>

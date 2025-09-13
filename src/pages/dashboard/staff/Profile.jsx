@@ -120,13 +120,13 @@ const StaffProfile = () => {
         </p>
       </div>
 
-      <div className="min-h-[calc(100vh-100px)] p-4 md:p-6">
-        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-md border border-gray-100 p-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+      <div className="min-h-[calc(100vh-100px)] p-2 sm:p-4 md:p-6">
+        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-md border border-gray-100 p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
 
             {/* User Avatar */}
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg ring ring-indigo-400 ring-offset-2">
+            <div className="flex-shrink-0 self-center md:self-auto">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg ring ring-indigo-400 ring-offset-2">
                 {userProfile?.profilePhoto && !imageError ? (
                   <img 
                     src={userProfile.profilePhoto} 
@@ -150,14 +150,14 @@ const StaffProfile = () => {
 
             {/* Details */}
             <div className="flex-1 w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <FaUser className="text-blue-600" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+                    <FaUser className="text-blue-600 text-sm sm:text-base" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-wider text-gray-500">Full Name</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-sm sm:text-lg font-semibold text-gray-900 truncate">
                       {userProfile && (userProfile.firstName || userProfile.lastName) 
                         ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim()
                         : 'Not set'
@@ -166,53 +166,53 @@ const StaffProfile = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <FaEnvelope className="text-green-600" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg">
+                    <FaEnvelope className="text-green-600 text-sm sm:text-base" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-wider text-gray-500">Email</p>
-                    <p className="text-lg font-medium text-gray-800">{userProfile?.email || 'Not available'}</p>
+                    <p className="text-sm sm:text-lg font-medium text-gray-800 truncate">{userProfile?.email || 'Not available'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <FaBuilding className="text-purple-600" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg">
+                    <FaBuilding className="text-purple-600 text-sm sm:text-base" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-wider text-gray-500">Department</p>
-                    <p className="text-lg font-medium text-gray-800">{userProfile?.department || 'Not set'}</p>
+                    <p className="text-sm sm:text-lg font-medium text-gray-800 truncate">{userProfile?.department || 'Not set'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <FaIdBadge className="text-orange-600" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-orange-100 rounded-lg">
+                    <FaIdBadge className="text-orange-600 text-sm sm:text-base" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-wider text-gray-500">Smart ID</p>
-                    <p className="text-lg font-medium text-gray-800">{userProfile?.smartId || userProfile?.staffId || 'Not available'}</p>
+                    <p className="text-sm sm:text-lg font-medium text-gray-800 truncate">{userProfile?.smartId || userProfile?.staffId || 'Not available'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-teal-100 rounded-lg">
-                    <FaBriefcase className="text-teal-600" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-teal-100 rounded-lg">
+                    <FaBriefcase className="text-teal-600 text-sm sm:text-base" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-wider text-gray-500">Job Title</p>
-                    <p className="text-lg font-medium text-gray-800">{userProfile?.jobTitle || 'Not set'}</p>
+                    <p className="text-sm sm:text-lg font-medium text-gray-800 truncate">{userProfile?.jobTitle || 'Not set'}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
-                    <FaBriefcase className="text-indigo-600" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-indigo-100 rounded-lg">
+                    <FaBriefcase className="text-indigo-600 text-sm sm:text-base" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-wider text-gray-500">Position</p>
-                    <p className="text-lg font-medium text-gray-800">{userProfile?.position || 'Not set'}</p>
+                    <p className="text-sm sm:text-lg font-medium text-gray-800 truncate">{userProfile?.position || 'Not set'}</p>
                   </div>
                 </div>
               </div>
@@ -220,12 +220,12 @@ const StaffProfile = () => {
 
             {/* QR */}
             <div className="flex-shrink-0 self-center md:self-auto">
-              <div className="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-100">
+              <div className="bg-gray-50 p-2 sm:p-3 md:p-4 rounded-xl shadow-inner border border-gray-100">
                 {qrValue ? (
-                  <QRCodeCanvas value={qrValue} size={150} />
+                  <QRCodeCanvas value={qrValue} size={120} className="sm:w-[150px] sm:h-[150px]" />
                 ) : (
-                  <div className="w-[150px] h-[150px] bg-gray-200 flex items-center justify-center rounded">
-                    <p className="text-gray-500 text-sm text-center">QR Code<br/>Unavailable</p>
+                  <div className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] bg-gray-200 flex items-center justify-center rounded">
+                    <p className="text-gray-500 text-xs sm:text-sm text-center">QR Code<br/>Unavailable</p>
                   </div>
                 )}
               </div>

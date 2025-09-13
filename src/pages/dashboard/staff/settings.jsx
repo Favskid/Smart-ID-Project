@@ -202,8 +202,8 @@ export default function Settings() {
         <p className="text-sm text-gray-500">Manage your profile and account settings</p>
       </div>
 
-      <div className="min-h-[calc(100vh-100px)] p-4 md:p-6">
-        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-md p-6">
+      <div className="min-h-[calc(100vh-100px)] p-2 sm:p-4 md:p-6">
+        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-md p-3 sm:p-4 md:p-6">
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -213,13 +213,13 @@ export default function Settings() {
 
           {/* Profile Info Display */}
           {userProfile && (
-            <div className="mb-8 p-6 bg-teal-50 border border-teal-200 rounded-lg">
+            <div className="mb-6 sm:mb-8 p-3 sm:p-4 md:p-6 bg-teal-50 border border-teal-200 rounded-lg">
               <h3 className="text-lg font-semibold text-teal-800 mb-4">Profile Information</h3>
               
-              <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                 {/* Profile Picture Section */}
                 <div className="flex flex-col items-center lg:items-start">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg mb-4">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg mb-4">
                     {userProfile.profilePhoto ? (
                       <img 
                         src={userProfile.profilePhoto} 
@@ -250,7 +250,7 @@ export default function Settings() {
 
                 {/* Profile Details */}
                 <div className="flex-1">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-teal-800">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-teal-800">
                     <div><span className="font-medium">First Name:</span> {userProfile.firstName || 'Not set'}</div>
                     <div><span className="font-medium">Last Name:</span> {userProfile.lastName || 'Not set'}</div>
                     <div><span className="font-medium">Email:</span> {userProfile.email || 'Not available'}</div>
@@ -265,7 +265,7 @@ export default function Settings() {
           )}
 
           {/* Photo Upload Section */}
-          <div className="mb-8 p-6 bg-white border border-gray-200 rounded-lg">
+          <div className="mb-6 sm:mb-8 p-3 sm:p-4 md:p-6 bg-white border border-gray-200 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <FaCamera className="text-teal-600" />
               Profile Photo
@@ -342,7 +342,7 @@ export default function Settings() {
 
           {/* Edit Profile Button */}
           {!isEditing && (
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-6 sm:mb-8">
               <button
                 onClick={() => setIsEditing(true)}
                 disabled={loading}
@@ -359,8 +359,8 @@ export default function Settings() {
           )}
 
           {/* Profile Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* First Name */}
               <div>
                 <label htmlFor="firstName" className="block text-xs uppercase tracking-wider text-gray-500 mb-2">
@@ -489,7 +489,7 @@ export default function Settings() {
 
             {/* Action Buttons */}
             {isEditing && (
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                 <button
                   type="submit"
                   disabled={loading}

@@ -11,6 +11,7 @@ import ResetPassword from './pages/Auth/resetPassword'
 import EmployeeTable from './pages/dashboard/admin/employees'
 import Adminprofile from './pages/dashboard/admin/adminprofile'
 import BusinessCard from './pages/dashboard/staff/BusinessCard'
+import StaffId from './pages/dashboard/staff/staffId'
 import StaffProfile from './pages/dashboard/staff/Profile'
 import Settings from './pages/dashboard/staff/settings'
 import './index.css'
@@ -56,7 +57,8 @@ createRoot(document.getElementById('root')).render(
         <Route path="/dashboard/admin/employees" element={<EmployeeTable />} />
         <Route path="/dashboard/staff" element={<Navigate to="/dashboard/staff/profile" replace />} />
         <Route path="/dashboard/staff/profile" element={<StaffProfile />} />
-        <Route path="/dashboard/staff/smartID" element={<BusinessCard />} />
+        <Route path="/dashboard/staff/BusinessCard" element={<BusinessCard />} />
+        <Route path="/dashboard/staff/staffId" element={<StaffId />} />
         <Route path="/dashboard/staff/settings" element={<Settings />} />
         <Route path="/dashboard" element={<Navigate to="/dashboard/staff/profile" replace />} />
       </Routes>

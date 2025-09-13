@@ -15,31 +15,34 @@ export default function Register() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    
-    try {
-      const response = await register(formData)
-      console.log('Registration successful:', response)
-      
-      // Small delay to ensure backend processes the registration
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Navigate to profile page with state to indicate fresh registration
-      navigate('/dashboard/staff/profile', { 
-        replace: true,
-        state: { fromRegistration: true }
-      })
-      
-    } catch (error) {
-      console.error('Registration failed:', error)
-      setError(error.message || 'Registration failed. Please try again.')
-    } finally {
-      setLoading(false)
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  
+  try {
+    const response = await register(formData);
+    console.log('Registration successful:', response);
+
+    // Store token (already done in authService.js if access_token exists)
+    if (response.access_token) {
+      localStorage.setItem("authToken", response.access_token);
     }
+
+    // Navigate to profile directly (user is auto-logged in)
+    navigate('/dashboard/staff/profile', { 
+      replace: true,
+      state: { fromRegistration: true }
+    });
+
+  } catch (error) {
+    console.error('Registration failed:', error);
+    setError(error.message || 'Registration failed. Please try again.');
+  } finally {
+    setLoading(false);
   }
+};
+
 
   const handleChange = (e) => {
     setFormData({

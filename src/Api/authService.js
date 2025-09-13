@@ -90,7 +90,7 @@ export const addProfilePhoto = async (photoFile) => {
     
     const response = await api.post("/add/profilePhoto", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data' // Let browser set the Content-Type with boundary
+        'Content-Type': 'multipart/form-data'
       },
     });
     return response.data;
