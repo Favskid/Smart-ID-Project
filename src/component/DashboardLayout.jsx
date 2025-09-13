@@ -64,8 +64,8 @@ const DashboardLayout = ({ children, role = "staff" }) => {
   // Sidebar menus for staff
   const staffMenu = [
     { name: "Profile", icon: <FaUser className="text-purple-600" />, href: "/dashboard/staff/profile", bg: "bg-purple-100" },
-    { name: "Smart ID", icon: <FaIdCard className="text-blue-600" />, href: "/dashboard/staff/smartID", bg: "bg-blue-100" },
-    { name: "Business Card", icon: <FaAddressCard className="text-green-600" />, href: "#", bg: "bg-green-100" },
+    { name: "Business Card", icon: <FaIdCard className="text-blue-600" />, href: "/dashboard/staff/smartID", bg: "bg-blue-100" },
+    { name: "Smart ID", icon: <FaAddressCard className="text-green-600" />, href: "#", bg: "bg-green-100" },
     { name: "Settings", icon: <FaCogs className="text-teal-600" />, href: "/dashboard/staff/settings", bg: "bg-teal-100" },
   ];
 

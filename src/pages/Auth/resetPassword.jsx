@@ -169,17 +169,19 @@ export default function ResetPassword() {
                     <FaLock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={loading}
-                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                    placeholder="Confirm new password"
-                    minLength={6}
-                  />
+                      id="newPassword"
+                      name="newPassword"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={loading}
+                      className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg 
+                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                                transition duration-200 text-gray-800 placeholder-gray-400"
+                      placeholder="Enter new password"
+                      minLength={6}
+                    />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
