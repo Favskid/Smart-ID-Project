@@ -24,19 +24,14 @@ export default function Register() {
       const response = await register(formData)
       console.log('Registration successful:', response)
       
-      // Ensure token is properly set before navigation
-      if (response.access_token) {
-        // Small delay to ensure backend processes the registration
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Navigate to profile page with state to indicate fresh registration
-        navigate('/dashboard/staff/profile', { 
-          replace: true,
-          state: { fromRegistration: true }
-        })
-      } else {
-        throw new Error('Registration successful but no token received')
-      }
+      // Small delay to ensure backend processes the registration
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Navigate to profile page with state to indicate fresh registration
+      navigate('/dashboard/staff/profile', { 
+        replace: true,
+        state: { fromRegistration: true }
+      })
       
     } catch (error) {
       console.error('Registration failed:', error)
