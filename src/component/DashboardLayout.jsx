@@ -15,15 +15,24 @@ import {
 } from "react-icons/fa";
 import { getProfile, logout } from "../Api/authService";
 
-const DashboardLayout = ({ children, role = "staff" }) => {
+const DashboardLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null); // State to store user role
 
-  // Fetch user profile on component mount
+  // Fetch user profile and role on component mount
   useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    if (role) {
+      setUserRole(role);
+    } else {
+      // If no role is found, redirect to login
+      navigate("/login", { replace: true });
+      return;
+    }
     fetchUserProfile();
     
     // Listen for profile updates from other components
@@ -36,7 +45,7 @@ const DashboardLayout = ({ children, role = "staff" }) => {
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, []);
+  }, [navigate]); // Added navigate to dependency array
 
   const fetchUserProfile = async () => {
     try {
@@ -78,7 +87,7 @@ const DashboardLayout = ({ children, role = "staff" }) => {
   ];
 
   // Choose menu based on role
-  const menuItems = role === "admin" ? adminMenu : staffMenu;
+  const menuItems = userRole === "admin" ? adminMenu : staffMenu;
 
   const handleMenuClick = (href) => {
     navigate(href);
@@ -155,7 +164,7 @@ const DashboardLayout = ({ children, role = "staff" }) => {
                   }
                 </h2>
                 <p className="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-full capitalize">
-                  {role}
+                  {userRole}
                 </p>
                 {userProfile?.department && (
                   <p className="text-xs text-gray-500 mt-1">

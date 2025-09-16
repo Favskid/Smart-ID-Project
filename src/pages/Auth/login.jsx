@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaUserCircle } from 'react-icons/fa'
 import { useNavigate, Link } from 'react-router-dom'
-import { login } from '../../Api/authService'
+import { login, checkAdminRole } from '../../Api/authService'
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -21,9 +21,23 @@ export default function LoginForm() {
     try {
       const response = await login(formData.email, formData.password)
       console.log('Login successful:', response)
-      
-      // Navigate to dashboard after successful login
-      navigate('/dashboard/staff')
+
+      // After successful login, check the user's role
+      const roleResponse = await checkAdminRole();
+      const userRole = roleResponse.role; // the API returns an object { role: "admin" } or { role: "staff" }
+
+      if (userRole === "admin") {
+        localStorage.setItem("userRole", "admin");
+        navigate('/dashboard/admin')
+      } else if (userRole === "staff") {
+        localStorage.setItem("userRole", "staff");
+        navigate('/dashboard/staff')
+      } else {
+        setError('Unauthorized role. Please contact support.');
+        // Optionally, log out the user if an unknown role is returned
+        // logout(); 
+      }
+
     } catch (error) {
       console.error('Login failed:', error)
       setError(error.response?.data?.message || 'Login failed. Please check your credentials.')

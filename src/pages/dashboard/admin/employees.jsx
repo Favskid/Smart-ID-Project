@@ -1,9 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import DashboardLayout from "../../../component/DashboardLayout";
 import { FaPlus, FaTimes, FaEdit, FaTrash, FaEye, FaEyeSlash, FaUsers } from "react-icons/fa";
 import Notification, { useNotification } from "../../../component/Notification";
+import { 
+  getAllStaff, 
+  adminInvite, 
+  updateStaff, 
+  deleteStaff,
+  getTotalStaffs, 
+  getTotalDepartments
+} from "../../../Api/authService";
 
 const EmployeeTable = () => {
   const [selectedQR, setSelectedQR] = useState(null);
@@ -12,12 +20,17 @@ const EmployeeTable = () => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [newEmployee, setNewEmployee] = useState({
     name: "",
-    idNumber: "",
+    staffId: "", // Changed from idNumber to staffId to match backend
     department: "",
     email: "",
     phone: "",
-    pic: ""
+    photo: "" // Changed from pic to photo to match backend
   });
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [totalStaffs, setTotalStaffs] = useState(0);
+  const [totalDepartments, setTotalDepartments] = useState(0);
   
   // Notification system
   const {
@@ -27,33 +40,32 @@ const EmployeeTable = () => {
     clearNotification
   } = useNotification();
 
-  const [employees, setEmployees] = useState([
-    {
-      id: "EMP001",
-      photo: "https://img.daisyui.com/images/profile/demo/2@94.webp",
-      name: "Hart Hagerty",
-      jobTitle: "Desktop Support Technician",
-      department: "IT",
-      email: "hart@example.com",
-      phone: "+1 555-123-4567",
-      qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=EMP001",
-      status: "active"
-    },
-    {
-      id: "EMP002",
-      photo: "https://img.daisyui.com/images/profile/demo/3@94.webp",
-      name: "Brice Swyre",
-      jobTitle: "Tax Accountant",
-      department: "Finance",
-      email: "brice@example.com",
-      phone: "+1 555-987-6543",
-      qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=EMP002",
-      status: "active"
-    },
-  ]);
-
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [employeeIdToDelete, setEmployeeIdToDelete] = useState(null);
+
+  // Fetch employees and dashboard stats
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const staffResponse = await getAllStaff();
+        setEmployees(staffResponse);
+
+        const totalStaffsResponse = await getTotalStaffs();
+        setTotalStaffs(totalStaffsResponse.totalStaffs); // Assuming response has a totalStaffs field
+
+        const totalDepartmentsResponse = await getTotalDepartments();
+        setTotalDepartments(totalDepartmentsResponse.totalDepartments); // Assuming response has a totalDepartments field
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+        setError(err.message || "Failed to fetch data.");
+        showError(err.message || "Failed to fetch data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -73,7 +85,7 @@ const EmployeeTable = () => {
     }));
   };
 
-  // Handle file upload
+  // Handle file upload (for new employee)
   const handleFileUpload = (e, isEdit = false) => {
     const file = e.target.files[0];
     if (file) {
@@ -87,7 +99,7 @@ const EmployeeTable = () => {
         } else {
           setNewEmployee(prev => ({
             ...prev,
-            pic: event.target.result
+            photo: event.target.result // Changed from pic to photo
           }));
         }
       };
@@ -96,63 +108,71 @@ const EmployeeTable = () => {
   };
 
   // Add new employee
-  const handleAddEmployee = () => {
-    if (!newEmployee.name || !newEmployee.idNumber || !newEmployee.department || !newEmployee.email || !newEmployee.phone) {
+  const handleAddEmployee = async () => {
+    if (!newEmployee.name || !newEmployee.staffId || !newEmployee.department || !newEmployee.email || !newEmployee.phone) {
       showError("Please fill in all required fields");
       return;
     }
 
-    const newEmp = {
-      id: newEmployee.idNumber,
-      photo: newEmployee.pic || "https://img.daisyui.com/images/profile/demo/1@94.webp",
-      name: newEmployee.name,
-      jobTitle: "Employee",
-      department: newEmployee.department,
-      email: newEmployee.email,
-      phone: newEmployee.phone,
-      qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${newEmployee.idNumber}`,
-      status: "active"
-    };
-
-    setEmployees(prev => [...prev, newEmp]);
-    
-    // Reset form
-    setNewEmployee({
-      name: "",
-      idNumber: "",
-      department: "",
-      email: "",
-      phone: "",
-      pic: ""
-    });
-    
-    showSuccess(`Staff member ${newEmployee.name} added successfully!`);
-    setShowAddForm(false);
+    try {
+      setLoading(true);
+      // The adminInvite endpoint is used to create a new staff member
+      const response = await adminInvite(newEmployee.email, "default_password"); // Assuming a default password for invite, or a separate field for password
+      // After successful invite, you might want to fetch all staff again to update the list
+      // Or, if the invite response includes the new staff member, add it to the state.
+      // For now, let's refetch all staff.
+      const staffResponse = await getAllStaff();
+      setEmployees(staffResponse);
+      showSuccess(`Staff member ${newEmployee.name} added successfully!`);
+      setShowAddForm(false);
+      setNewEmployee({
+        name: "",
+        staffId: "",
+        department: "",
+        email: "",
+        phone: "",
+        photo: ""
+      });
+    } catch (err) {
+      console.error("Failed to add staff:", err);
+      showError(err.message || "Failed to add staff member.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Edit employee
-  const handleEditEmployee = () => {
+  const handleEditEmployee = async () => {
     if (!editingEmployee.name || !editingEmployee.department || !editingEmployee.email || !editingEmployee.phone) {
       showError("Please fill in all required fields");
       return;
     }
 
-    setEmployees(prev => prev.map(emp => 
-      emp.id === editingEmployee.id ? editingEmployee : emp
-    ));
-    
-    showSuccess(`Staff member ${editingEmployee.name} updated successfully!`);
-    setShowEditForm(false);
-    setEditingEmployee(null);
+    try {
+      setLoading(true);
+      await updateStaff(editingEmployee.id, editingEmployee);
+      const staffResponse = await getAllStaff(); // Re-fetch to ensure data consistency
+      setEmployees(staffResponse);
+      showSuccess(`Staff member ${editingEmployee.name} updated successfully!`);
+      setShowEditForm(false);
+      setEditingEmployee(null);
+    } catch (err) {
+      console.error("Failed to update staff:", err);
+      showError(err.message || "Failed to update staff member.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Deactivate/Activate employee
+  // Deactivate/Activate employee (Assuming this is a local state change or needs a separate API)
+  // For now, keeping it as local state change until clarified with a specific API endpoint.
   const toggleEmployeeStatus = (employeeId) => {
     setEmployees(prev => prev.map(emp => 
       emp.id === employeeId 
         ? { ...emp, status: emp.status === "active" ? "inactive" : "active" }
         : emp
     ));
+    showSuccess(`Staff member status toggled.`);
   };
 
   // Delete flow with modal
@@ -161,13 +181,23 @@ const EmployeeTable = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteEmployee = () => {
+  const confirmDeleteEmployee = async () => {
     if (employeeIdToDelete) {
-      const employeeName = employees.find(emp => emp.id === employeeIdToDelete)?.name || 'Staff member';
-      setEmployees(prev => prev.filter(emp => emp.id !== employeeIdToDelete));
-      showSuccess(`${employeeName} deleted successfully!`);
-      setEmployeeIdToDelete(null);
-      setShowDeleteModal(false);
+      try {
+        setLoading(true);
+        await deleteStaff(employeeIdToDelete);
+        const employeeName = employees.find(emp => emp.id === employeeIdToDelete)?.name || 'Staff member';
+        const staffResponse = await getAllStaff(); // Re-fetch to ensure data consistency
+        setEmployees(staffResponse);
+        showSuccess(`${employeeName} deleted successfully!`);
+        setEmployeeIdToDelete(null);
+        setShowDeleteModal(false);
+      } catch (err) {
+        console.error("Failed to delete staff:", err);
+        showError(err.message || "Failed to delete staff member.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -195,7 +225,7 @@ const EmployeeTable = () => {
   const inactiveEmployees = employees.filter(emp => emp.status === "inactive");
 
   return (
-    <DashboardLayout role="admin" profilePic="/src/assets/pic.png">
+    <DashboardLayout>
       {/* Notification Component */}
       {notification && (
         <Notification
@@ -212,7 +242,7 @@ const EmployeeTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Staff</p>
-                <p className="text-2xl font-bold text-gray-900">{employees.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{totalStaffs}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-full">
                 <FaUsers className="text-blue-600 text-xl" />
@@ -224,10 +254,10 @@ const EmployeeTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Staff</p>
-                <p className="text-2xl font-bold text-green-600">{activeEmployees.length}</p>
+                <p className="text-2xl font-bold text-green-600">{employees.filter(emp => emp.status === "active").length}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-full">
-                <FaEye className="text-green-600 text-xl" />
+              <FaEye className="text-green-600 text-xl" />
               </div>
             </div>
           </div>
@@ -236,7 +266,7 @@ const EmployeeTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Inactive Staff</p>
-                <p className="text-2xl font-bold text-orange-600">{inactiveEmployees.length}</p>
+                <p className="text-2xl font-bold text-orange-600">{employees.filter(emp => emp.status === "inactive").length}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-full">
                 <FaEyeSlash className="text-orange-600 text-xl" />
@@ -248,7 +278,7 @@ const EmployeeTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Departments</p>
-                <p className="text-2xl font-bold text-purple-600">{new Set(employees.map(emp => emp.department)).size}</p>
+                <p className="text-2xl font-bold text-purple-600">{totalDepartments}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-full">
                 <FaUsers className="text-purple-600 text-xl" />
@@ -293,8 +323,8 @@ const EmployeeTable = () => {
               </tr>
             </thead>
             <tbody>
-              {employees.map((emp) => (
-                <tr key={emp.id} className={emp.status === "inactive" ? "opacity-60" : ""}>
+              {employees.map((emp, index) => (
+                <tr key={emp.id || index} className={emp.status === "inactive" ? "opacity-60" : ""}>
                   <td className="font-medium text-black">{emp.id}</td>
                   <td>
                     <div className="flex items-center gap-3">
@@ -393,8 +423,8 @@ const EmployeeTable = () => {
                     </label>
                     <input
                       type="text"
-                      name="idNumber"
-                      value={newEmployee.idNumber}
+                      name="staffId"
+                      value={newEmployee.staffId}
                       onChange={handleInputChange}
                       className="input input-bordered w-full"
                       placeholder="Enter ID number"
