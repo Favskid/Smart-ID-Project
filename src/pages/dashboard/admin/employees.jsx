@@ -183,18 +183,22 @@ const EmployeeTable = () => {
 
   const confirmDeleteEmployee = async () => {
     if (employeeIdToDelete) {
+      console.log("Attempting to delete staff with ID:", employeeIdToDelete);
       try {
         setLoading(true);
-        await deleteStaff(employeeIdToDelete);
+        const response = await deleteStaff(employeeIdToDelete); // Capture the response
+        console.log("Delete API response:", response);
         const employeeName = employees.find(emp => emp.id === employeeIdToDelete)?.name || 'Staff member';
         const staffResponse = await getAllStaff(); // Re-fetch to ensure data consistency
+        console.log("Staff list after deletion:", staffResponse);
         setEmployees(staffResponse);
-        showSuccess(`${employeeName} deleted successfully!`);
+        showSuccess(response.message || `${employeeName} deleted successfully!`); // Use message from response
         setEmployeeIdToDelete(null);
         setShowDeleteModal(false);
       } catch (err) {
         console.error("Failed to delete staff:", err);
-        showError(err.message || "Failed to delete staff member.");
+        console.error("Error response data:", err.response?.data);
+        showError(err.response?.data?.message || err.message || "Failed to delete staff member.");
       } finally {
         setLoading(false);
       }
