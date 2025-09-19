@@ -8,7 +8,7 @@ export default function Register() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    staffID: '',
+    staffId: '',
     department: ''
   })
   const [loading, setLoading] = useState(false)
@@ -100,7 +100,7 @@ export default function Register() {
 
             {/* Staff ID Field */}
             <div>
-              <label htmlFor="staffID" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="staffId" className="block text-sm font-medium text-gray-700 mb-2">
                 Staff ID
               </label>
               <div className="relative">
@@ -108,11 +108,11 @@ export default function Register() {
                   <FaIdCard className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="staffID"
-                  name="staffID"
+                  id="staffId"
+                  name="staffId"
                   type="text"
                   required
-                  value={formData.staffID}
+                  value={formData.staffId}
                   onChange={handleChange}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-500"
                   placeholder="Enter your staff ID"

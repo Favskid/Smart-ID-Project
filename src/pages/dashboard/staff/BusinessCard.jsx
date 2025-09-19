@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaDownload, FaEnvelope, FaBriefcase, FaBuilding } from 'react-icons/fa';
+import { FaDownload, FaEnvelope, FaBriefcase, FaBuilding, FaUser } from 'react-icons/fa';
 import { QRCodeCanvas } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import DashboardLayout from '../../../component/DashboardLayout';
