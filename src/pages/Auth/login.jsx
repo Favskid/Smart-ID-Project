@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaUserCircle } from 'react-icons/fa'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { login, getUserRole  } from '../../Api/authService'
 
 export default function LoginForm() {
@@ -8,7 +8,18 @@ export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Check for success message from registration
+  useEffect(() => {
+    if (location.state?.message && location.state?.type === 'success') {
+      setSuccessMessage(location.state.message)
+      // Clear the state to prevent showing message on refresh
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -70,6 +81,12 @@ export default function LoginForm() {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
               <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-600 text-sm">{successMessage}</p>
             </div>
           )}
 
