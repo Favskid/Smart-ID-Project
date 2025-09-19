@@ -24,20 +24,46 @@ export default function Register() {
     const response = await register(formData);
     console.log('Registration successful:', response);
 
-    // Store token (already done in authService.js if access_token exists)
+    // Check if backend provides auto-login token
     if (response.access_token) {
       localStorage.setItem("authToken", response.access_token);
+      // Add delay to ensure token is properly set before navigation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Navigate to profile if auto-login is successful
+      navigate('/dashboard/staff/profile', { 
+        replace: true,
+        state: { fromRegistration: true }
+      });
+    } else {
+      // No auto-login token, redirect to login with success message
+      navigate('/login', { 
+        replace: true,
+        state: { 
+          message: 'Registration successful! Please log in with your credentials.',
+          type: 'success'
+        }
+      });
     }
-
-    // Navigate to profile directly (user is auto-logged in)
-    navigate('/dashboard/staff/profile', { 
-      replace: true,
-      state: { fromRegistration: true }
-    });
 
   } catch (error) {
     console.error('Registration failed:', error);
-    setError(error.message || 'Registration failed. Please try again.');
+    
+    // Extract backend error message properly
+    let errorMessage = 'Registration failed. Please try again.';
+    
+    if (error.response?.data) {
+      const backendError = error.response.data;
+      errorMessage = backendError.msg || backendError.message || backendError.error || errorMessage;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    // Handle specific error cases
+    if (errorMessage.includes('already registered') || errorMessage.includes('already exists')) {
+      errorMessage = 'This email is already registered. Please try logging in instead.';
+    }
+    
+    setError(errorMessage);
   } finally {
     setLoading(false);
   }
