@@ -1,14 +1,11 @@
 import { useState } from 'react'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaUserCircle } from 'react-icons/fa'
 import { useNavigate, Link } from 'react-router-dom'
-import { login, checkAdminRole } from '../../Api/authService'
+import { login, getUserRole  } from '../../Api/authService'
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
+  const [formData, setFormData] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -19,46 +16,47 @@ export default function LoginForm() {
     setError('')
     
     try {
+      // Step 1: Login with credentials
       const response = await login(formData.email, formData.password)
       console.log('Login successful:', response)
 
-      // After successful login, check the user's role
-      const roleResponse = await checkAdminRole();
-      const userRole = roleResponse.role; // the API returns an object { role: "admin" } or { role: "staff" }
+      // Save token
+      const token = response?.access_token
+      if (!token) throw new Error("No token received from login")
 
-      if (userRole === "admin") {
-        localStorage.setItem("userRole", "admin");
-        navigate('/dashboard/admin')
-      } else if (userRole === "staff") {
-        localStorage.setItem("userRole", "staff");
-        navigate('/dashboard/staff')
+      localStorage.setItem("authToken", token)
+
+      // Step 2: Check role
+      const role = await getUserRole()
+      console.log("User role:", role)
+
+      // Step 3: Save role and navigate
+      localStorage.setItem("userRole", role.toLowerCase())
+
+      if (role.toLowerCase() === "admin") {
+        navigate("/dashboard/admin")
+      } else if (role.toLowerCase() === "staff") {
+        navigate("/dashboard/staff")
       } else {
-        setError('Unauthorized role. Please contact support.');
-        // Optionally, log out the user if an unknown role is returned
-        // logout(); 
+        setError("You are not authorized to access this system.")
       }
 
     } catch (error) {
       console.error('Login failed:', error)
-      setError(error.response?.data?.message || 'Login failed. Please check your credentials.')
+      setError(error.response?.data?.message || error.message || 'Login failed. Please check your credentials.')
     } finally {
       setLoading(false)
     }
   }
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Mobile-first card design */}
         <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
-          {/* Header */}
           <header className="text-center mb-6">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-indigo-800 flex items-center justify-center gap-2">
               <FaUserCircle className="text-indigo-600" />
@@ -69,16 +67,14 @@ export default function LoginForm() {
             </p>
           </header>
 
-          {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
@@ -94,13 +90,13 @@ export default function LoginForm() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-500"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
                   placeholder="Enter your email"
                 />
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
@@ -116,7 +112,7 @@ export default function LoginForm() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-500"
+                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
                   placeholder="Enter your password"
                 />
                 <button
@@ -133,41 +129,40 @@ export default function LoginForm() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember me & forgot password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                   Remember me
                 </label>
               </div>
               <div className="text-sm">
-                <Link to="/forgotPassword" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
+                <Link to="/forgotPassword" className="font-medium text-blue-600 hover:text-blue-500">
                   Forgot password?
                 </Link>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
-          {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
+              <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
                 Register
               </Link>
             </p>

@@ -20,11 +20,11 @@ const EmployeeTable = () => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [newEmployee, setNewEmployee] = useState({
     name: "",
-    staffId: "", // Changed from idNumber to staffId to match backend
+    staffId: "", 
     department: "",
     email: "",
     phone: "",
-    photo: "" // Changed from pic to photo to match backend
+    photo: ""
   });
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,87 +43,130 @@ const EmployeeTable = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [employeeIdToDelete, setEmployeeIdToDelete] = useState(null);
 
-  // Fetch employees and dashboard stats
-  useEffect(() => {
-    const fetchData = async () => {
+  /***************************************************************************
+   * Helpers to parse backend responses (robust to different response shapes)
+   ***************************************************************************/
+  const normalizeStaffList = (response) => {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response.data)) return response.data;
+    if (Array.isArray(response.staffs)) return response.staffs;
+    // sometimes backend sends { result: [...] }
+    if (Array.isArray(response.result)) return response.result;
+    return [];
+  };
+
+  const parseTotalValue = (response, keyFallbackValue) => {
+    if (response == null) return keyFallbackValue;
+    // If response is a straight number
+    if (typeof response === "number") return response;
+    // If response is object with known key(s)
+    if (typeof response === "object") {
+      if (typeof response.totalStaffs === "number") return response.totalStaffs;
+      if (typeof response.totalDepartments === "number") return response.totalDepartments;
+      if (typeof response.total === "number") return response.total;
+      if (typeof response.count === "number") return response.count;
+    }
+    return keyFallbackValue;
+  };
+
+  /***************************************************************************
+   * Centralized refresh (used after add / edit / delete)
+   ***************************************************************************/
+  const refreshStaffList = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const staffResponse = await getAllStaff();
+      const staffArray = normalizeStaffList(staffResponse);
+      setEmployees(staffArray);
+
+      // Try fetching totals from endpoints; fallback to calculating
       try {
-        setLoading(true);
-        const staffResponse = await getAllStaff();
-        setEmployees(staffResponse);
-
-        const totalStaffsResponse = await getTotalStaffs();
-        setTotalStaffs(totalStaffsResponse.totalStaffs); // Assuming response has a totalStaffs field
-
-        const totalDepartmentsResponse = await getTotalDepartments();
-        setTotalDepartments(totalDepartmentsResponse.totalDepartments); // Assuming response has a totalDepartments field
+        const ts = await getTotalStaffs();
+        const parsedTs = parseTotalValue(ts, staffArray.length);
+        setTotalStaffs(parsedTs);
       } catch (err) {
-        console.error("Failed to fetch data:", err);
-        setError(err.message || "Failed to fetch data.");
-        showError(err.message || "Failed to fetch data.");
-      } finally {
-        setLoading(false);
+        // fallback: length of staff list
+        setTotalStaffs(staffArray.length);
       }
-    };
-    fetchData();
-  }, []);
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewEmployee(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Handle edit form input changes
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditingEmployee(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Handle file upload (for new employee)
-  const handleFileUpload = (e, isEdit = false) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (isEdit) {
-          setEditingEmployee(prev => ({
-            ...prev,
-            photo: event.target.result
-          }));
-        } else {
-          setNewEmployee(prev => ({
-            ...prev,
-            photo: event.target.result // Changed from pic to photo
-          }));
-        }
-      };
-      reader.readAsDataURL(file);
+      try {
+        const td = await getTotalDepartments();
+        const parsedTd = parseTotalValue(td, new Set(staffArray.map(s => (s.department || "").trim().toLowerCase())).size);
+        setTotalDepartments(parsedTd);
+      } catch (err) {
+        // fallback: count unique departments
+        const depts = new Set(staffArray.map(s => (s.department || "").trim().toLowerCase()).filter(Boolean));
+        setTotalDepartments(depts.size);
+      }
+    } catch (err) {
+      console.error("Failed to refresh staff list:", err);
+      setError(err?.message || "Failed to load staff data.");
+      showError(err?.message || "Failed to load staff data.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Add new employee
+  // initial load
+  useEffect(() => {
+    refreshStaffList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /***************************************************************************
+   * Form handlers
+   ***************************************************************************/
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewEmployee(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditingEmployee(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileUpload = (e, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      if (isEdit) {
+        setEditingEmployee(prev => ({ ...prev, photo: dataUrl }));
+      } else {
+        setNewEmployee(prev => ({ ...prev, photo: dataUrl }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /***************************************************************************
+   * Add new employee
+   ***************************************************************************/
   const handleAddEmployee = async () => {
     if (!newEmployee.name || !newEmployee.staffId || !newEmployee.department || !newEmployee.email || !newEmployee.phone) {
       showError("Please fill in all required fields");
       return;
     }
 
+    const emailExists = employees.some(emp => (emp.email || "").toLowerCase() === newEmployee.email.toLowerCase());
+    if (emailExists) {
+      showError("An employee with this email already exists");
+      return;
+    }
+
     try {
       setLoading(true);
-      // The adminInvite endpoint is used to create a new staff member
-      const response = await adminInvite(newEmployee.email, "default_password"); // Assuming a default password for invite, or a separate field for password
-      // After successful invite, you might want to fetch all staff again to update the list
-      // Or, if the invite response includes the new staff member, add it to the state.
-      // For now, let's refetch all staff.
-      const staffResponse = await getAllStaff();
-      setEmployees(staffResponse);
-      showSuccess(`Staff member ${newEmployee.name} added successfully!`);
+      // Send full staff object (authService.adminInvite uses same route)
+      const response = await adminInvite(newEmployee);
+      // refresh list from server (preferred)
+      await refreshStaffList();
+
+      showSuccess(response?.message || `Staff member ${newEmployee.name} added successfully!`);
       setShowAddForm(false);
       setNewEmployee({
         name: "",
@@ -134,38 +177,44 @@ const EmployeeTable = () => {
         photo: ""
       });
     } catch (err) {
-      console.error("Failed to add staff:", err);
-      showError(err.message || "Failed to add staff member.");
+      console.error("Failed to add staff:", err, err?.response?.data);
+      // Prefer backend message if available
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.response?.data;
+      const errorMessage = backendMsg || err?.message || "Failed to add staff member.";
+      showError(typeof errorMessage === "string" ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }
   };
 
-  // Edit employee
+  /***************************************************************************
+   * Edit employee
+   ***************************************************************************/
   const handleEditEmployee = async () => {
-    if (!editingEmployee.name || !editingEmployee.department || !editingEmployee.email || !editingEmployee.phone) {
+    if (!editingEmployee || !editingEmployee.name || !editingEmployee.department || !editingEmployee.email || !editingEmployee.phone) {
       showError("Please fill in all required fields");
       return;
     }
 
     try {
       setLoading(true);
-      await updateStaff(editingEmployee.id, editingEmployee);
-      const staffResponse = await getAllStaff(); // Re-fetch to ensure data consistency
-      setEmployees(staffResponse);
-      showSuccess(`Staff member ${editingEmployee.name} updated successfully!`);
+      const response = await updateStaff(editingEmployee.id, editingEmployee);
+      await refreshStaffList();
+      showSuccess(response?.message || `Staff member ${editingEmployee.name} updated successfully!`);
       setShowEditForm(false);
       setEditingEmployee(null);
     } catch (err) {
-      console.error("Failed to update staff:", err);
-      showError(err.message || "Failed to update staff member.");
+      console.error("Failed to update staff:", err, err?.response?.data);
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
+      showError(backendMsg || err?.message || "Failed to update staff member.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Deactivate/Activate employee (Assuming this is a local state change or needs a separate API)
-  // For now, keeping it as local state change until clarified with a specific API endpoint.
+  /***************************************************************************
+   * Toggle status (local only for now)
+   ***************************************************************************/
   const toggleEmployeeStatus = (employeeId) => {
     setEmployees(prev => prev.map(emp => 
       emp.id === employeeId 
@@ -175,33 +224,24 @@ const EmployeeTable = () => {
     showSuccess(`Staff member status toggled.`);
   };
 
-  // Delete flow with modal
-  const promptDeleteEmployee = (employeeId) => {
-    setEmployeeIdToDelete(employeeId);
-    setShowDeleteModal(true);
-  };
-
+  /***************************************************************************
+   * Delete flow with modal
+   ***************************************************************************/
   const confirmDeleteEmployee = async () => {
-    if (employeeIdToDelete) {
-      console.log("Attempting to delete staff with ID:", employeeIdToDelete);
-      try {
-        setLoading(true);
-        const response = await deleteStaff(employeeIdToDelete); // Capture the response
-        console.log("Delete API response:", response);
-        const employeeName = employees.find(emp => emp.id === employeeIdToDelete)?.name || 'Staff member';
-        const staffResponse = await getAllStaff(); // Re-fetch to ensure data consistency
-        console.log("Staff list after deletion:", staffResponse);
-        setEmployees(staffResponse);
-        showSuccess(response.message || `${employeeName} deleted successfully!`); // Use message from response
-        setEmployeeIdToDelete(null);
-        setShowDeleteModal(false);
-      } catch (err) {
-        console.error("Failed to delete staff:", err);
-        console.error("Error response data:", err.response?.data);
-        showError(err.response?.data?.message || err.message || "Failed to delete staff member.");
-      } finally {
-        setLoading(false);
-      }
+    if (!employeeIdToDelete) return;
+    try {
+      setLoading(true);
+      const response = await deleteStaff(employeeIdToDelete);
+      await refreshStaffList();
+      showSuccess(response?.message || "Staff member deleted successfully!");
+      setEmployeeIdToDelete(null);
+      setShowDeleteModal(false);
+    } catch (err) {
+      console.error("Failed to delete staff:", err, err?.response?.data);
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
+      showError(backendMsg || err?.message || "Failed to delete staff member.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -210,13 +250,20 @@ const EmployeeTable = () => {
     setShowDeleteModal(false);
   };
 
-  // Open edit form
+  const promptDeleteEmployee = (employeeId) => {
+    setEmployeeIdToDelete(employeeId);
+    setShowDeleteModal(true);
+  };
+
+  /***************************************************************************
+   * Effects
+   ***************************************************************************/
+
   const openEditForm = (employee) => {
     setEditingEmployee({ ...employee });
     setShowEditForm(true);
   };
 
-  // Download Excel
   const downloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(employees);
     const workbook = XLSX.utils.book_new();
@@ -224,9 +271,6 @@ const EmployeeTable = () => {
     const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
     saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), "employees.xlsx");
   };
-
-  const activeEmployees = employees.filter(emp => emp.status === "active");
-  const inactiveEmployees = employees.filter(emp => emp.status === "inactive");
 
   return (
     <DashboardLayout>
@@ -239,7 +283,7 @@ const EmployeeTable = () => {
           onClose={clearNotification}
         />
       )}
-    <div className="min-h-screen">
+      <div className="min-h-screen">
         {/* Dashboard Stats */}
         {loading ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh]">
@@ -273,7 +317,7 @@ const EmployeeTable = () => {
                     <p className="text-2xl font-bold text-green-600">{employees.filter(emp => emp.status === "active").length}</p>
                   </div>
                   <div className="p-3 bg-green-100 rounded-full">
-                  <FaEye className="text-green-600 text-xl" />
+                    <FaEye className="text-green-600 text-xl" />
                   </div>
                 </div>
               </div>
@@ -339,8 +383,8 @@ const EmployeeTable = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {employees.map((emp, index) => (
-                    <tr key={emp.id || index} className={emp.status === "inactive" ? "opacity-60" : ""}>
+                  {employees.map((emp) => (
+                    <tr key={emp.id || emp.staffId || emp.email} className={emp.status === "inactive" ? "opacity-60" : ""}>
                       <td className="font-medium text-black">{emp.id}</td>
                       <td>
                         <div className="flex items-center gap-3">
@@ -452,23 +496,17 @@ const EmployeeTable = () => {
                         <label className="label">
                           <span className="label-text font-medium">Department *</span>
                         </label>
-                        <select
+                        <input
+                          type="text"
                           name="department"
                           value={newEmployee.department}
                           onChange={handleInputChange}
-                          className="select select-bordered w-full"
+                          className="input input-bordered w-full"
+                          placeholder="Enter department name"
                           required
-                        >
-                          <option value="">Select Department</option>
-                          <option value="IT">IT</option>
-                          <option value="Finance">Finance</option>
-                          <option value="HR">HR</option>
-                          <option value="Marketing">Marketing</option>
-                          <option value="Sales">Sales</option>
-                          <option value="Operations">Operations</option>
-                        </select>
+                        />
                       </div>
-                      
+
                       <div>
                         <label className="label">
                           <span className="label-text font-medium">Email *</span>
@@ -517,14 +555,16 @@ const EmployeeTable = () => {
                         type="button"
                         onClick={() => setShowAddForm(false)}
                         className="btn btn-ghost"
+                        disabled={loading}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         className="btn btn-primary"
+                        disabled={loading}
                       >
-                        Add Staff
+                        {loading ? "Adding..." : "Add Staff"}
                       </button>
                     </div>
                   </form>
@@ -555,7 +595,7 @@ const EmployeeTable = () => {
                         <input
                           type="text"
                           name="name"
-                          value={editingEmployee.name}
+                          value={editingEmployee.name || ""}
                           onChange={handleEditInputChange}
                           className="input input-bordered w-full"
                           required
@@ -566,20 +606,15 @@ const EmployeeTable = () => {
                         <label className="label">
                           <span className="label-text font-medium">Department *</span>
                         </label>
-                        <select
+                        <input
+                          type="text"
                           name="department"
-                          value={editingEmployee.department}
+                          value={editingEmployee.department || ""}
                           onChange={handleEditInputChange}
-                          className="select select-bordered w-full"
+                          className="input input-bordered w-full"
+                          placeholder="Enter department name"
                           required
-                        >
-                          <option value="IT">IT</option>
-                          <option value="Finance">Finance</option>
-                          <option value="HR">HR</option>
-                          <option value="Marketing">Marketing</option>
-                          <option value="Sales">Sales</option>
-                          <option value="Operations">Operations</option>
-                        </select>
+                        />
                       </div>
                       
                       <div>
@@ -589,7 +624,7 @@ const EmployeeTable = () => {
                         <input
                           type="email"
                           name="email"
-                          value={editingEmployee.email}
+                          value={editingEmployee.email || ""}
                           onChange={handleEditInputChange}
                           className="input input-bordered w-full"
                           required
@@ -603,7 +638,7 @@ const EmployeeTable = () => {
                         <input
                           type="tel"
                           name="phone"
-                          value={editingEmployee.phone}
+                          value={editingEmployee.phone || ""}
                           onChange={handleEditInputChange}
                           className="input input-bordered w-full"
                           required
@@ -637,14 +672,16 @@ const EmployeeTable = () => {
                         type="button"
                         onClick={() => setShowEditForm(false)}
                         className="btn btn-ghost"
+                        disabled={loading}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         className="btn btn-primary"
+                        disabled={loading}
                       >
-                        Update Staff
+                        {loading ? "Updating..." : "Update Staff"}
                       </button>
                     </div>
                   </form>
@@ -672,10 +709,24 @@ const EmployeeTable = () => {
               <dialog open className="modal modal-open">
                 <div className="modal-box">
                   <h3 className="font-bold text-lg">Delete Staff</h3>
-                  <p className="py-4">Are you sure you want to delete this staff member?</p>
+                  <p className="py-4">
+                    Are you sure you want to delete this staff member? This action cannot be undone.
+                  </p>
                   <div className="modal-action">
-                    <button className="btn btn-ghost" onClick={cancelDeleteEmployee}>Cancel</button>
-                    <button className="btn btn-error" onClick={confirmDeleteEmployee}>Delete</button>
+                    <button
+                      className="btn btn-ghost"
+                      onClick={cancelDeleteEmployee}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className={`btn btn-error ${loading ? "loading" : ""}`}
+                      onClick={confirmDeleteEmployee}
+                      disabled={loading}
+                    >
+                      {loading ? "Deleting..." : "Delete"}
+                    </button>
                   </div>
                 </div>
               </dialog>

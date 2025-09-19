@@ -1,6 +1,6 @@
 import api from "./apiClient";
 
-// Login function
+// Login function (works for staff + admin)
 export const login = async (email, password) => {
   try {
     const response = await api.post("/auth/login", { email, password });
@@ -18,31 +18,6 @@ export const login = async (email, password) => {
   }
 };
 
-// Admin Login function
-export const adminLogin = async (email, password) => {
-  try {
-    const response = await api.post("/api/Admin/invite", { email, password });
-    const { access_token, message } = response.data;
-
-    if (access_token) {
-      localStorage.setItem("authToken", access_token);
-      api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
-    }
-    
-    // Assuming the backend sends a specific message or role for admin
-    if (message === "Welcome Admin ") {
-      localStorage.setItem("userRole", "admin"); // Store user role
-    } else {
-      localStorage.removeItem("userRole");
-    }
-
-    return response.data;
-  } catch (error) {
-    console.error("Admin login failed:", error.response?.data || error.message);
-    throw error;
-  }
-};
-
 // Register function
 export const register = async (userData) => {
   try {
@@ -50,7 +25,7 @@ export const register = async (userData) => {
     const registrationData = {
       email: userData.email,
       password: userData.password,
-      staffId: userData.staffID, // Note: backend expects 'staffId' not 'staffID'
+      staffId: userData.staffId, 
       department: userData.department
     };
 
@@ -126,9 +101,9 @@ export const addProfilePhoto = async (photoFile) => {
 };
 
 // Admin API functions
-export const adminInvite = async (email, password) => {
+export const adminInvite = async (staffData) => {
   try {
-    const response = await api.post("/api/Admin/invite", { email, password });
+    const response = await api.post("/api/Admin/invite", staffData); // Send the full staffData object
     return response.data;
   } catch (error) {
     console.error("Admin invite failed:", error.response?.data || error.message);
@@ -142,16 +117,6 @@ export const getAdminDashboard = async () => {
     return response.data;
   } catch (error) {
     console.error("Failed to fetch admin dashboard:", error.response?.data || error.message);
-    throw error;
-  }
-};
-
-export const checkAdminRole = async () => {
-  try {
-    const response = await api.get("/api/Admin/check-role");
-    return response.data;
-  } catch (error) {
-    console.error("Failed to check admin role:", error.response?.data || error.message);
     throw error;
   }
 };
@@ -214,5 +179,21 @@ export const getTotalDepartments = async () => {
     console.error("Failed to fetch total departments:", error.response?.data || error.message);
     throw error;
   }
+};
+
+// Get user role (admin or staff)
+export const getUserRole = async () => {
+  try {
+    const response = await api.get("/api/Admin/check-role");
+    if (response.status === 200) {
+      localStorage.setItem("userRole", "admin");
+      return "admin";
+    }
+  } catch (error) {
+    // If admin check fails, assume staff role
+    console.warn("Admin role check failed, assuming staff role:", error.message);
+  }
+  localStorage.setItem("userRole", "staff");
+  return "staff";
 };
 
